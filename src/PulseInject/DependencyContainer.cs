@@ -19,7 +19,7 @@
 
         public Dependency? GetDependency(Type type)
         {
-            return _dependencies.FirstOrDefault(d => d.Type.Name == type.Name);
+            return _dependencies.FirstOrDefault(d => d.Type == type);
         }
     }
 }
