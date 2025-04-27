@@ -1,4 +1,6 @@
-﻿namespace LambdaPulse.DI
+﻿using System.Reflection;
+
+namespace LambdaPulse.DI
 {
     public class DependencyResolver
     {
@@ -14,7 +16,7 @@
             return (T?)GetType(typeof(T));
         }
 
-        public object? GetType(Type type)
+        private object? GetType(Type type)
         {
             var dependency = _container.GetDependency(type);
 
@@ -31,10 +33,8 @@
             }
 
             //service can have further dependencies passed into its constructor
-            var constructors = type.GetConstructors();
+            var constructor = GetConstructor(type);
 
-            //use constructor with most params
-            var constructor = type.GetConstructors().OrderByDescending(ctr => ctr.GetParameters().Length).First();
             var parameters = constructor.GetParameters();
 
             //holds the instantiated dependency params
@@ -62,6 +62,39 @@
             }
 
             return masterInstance;
+        }
+
+        //use constructor with the most resolvable parameters
+        private ConstructorInfo GetConstructor(Type type)
+        {
+            var orderedConstructors = type.GetConstructors().OrderByDescending(ctr => ctr.GetParameters().Length);
+
+            foreach (var constructor in orderedConstructors)
+            {
+                bool parametersResolvable = true;
+
+                foreach (var parameter in constructor.GetParameters())
+                {
+                    //value types without default value cannot be instantiated
+                    if (parameter.ParameterType.IsValueType && !parameter.HasDefaultValue)
+                    {
+                        parametersResolvable = false;
+                        break;
+                    }
+                    //dependency not registered
+                    if (_container.GetDependency(parameter.ParameterType) == null)
+                    {
+                        parametersResolvable = false;
+                        break;
+                    }
+                }
+
+                if (parametersResolvable)
+                {
+                    return constructor;
+                }
+            }
+            throw new NotImplementedException($"No suitable constructor found for {type.Name}");
         }
     }
 }
