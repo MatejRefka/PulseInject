@@ -5,7 +5,7 @@ namespace LambdaPulse.Tests.DI
     public class DependencyTests
     {
         [Fact]
-        public void Constructor_SetsProperties()
+        public void Constructor_SetProperties()
         {
             //arrange
             var expectedType = typeof(string);

@@ -16,20 +16,48 @@ namespace LambdaPulse.DI
             return (T?)GetType(typeof(T));
         }
 
-        private object? GetType(Type type)
+        private object? GetType(Type type, object? declaredDefault = null)
         {
             var dependency = _container.GetDependency(type);
-
-            //service is not registered in the dependency container
-            if (dependency == null)
-            {
-                return default;
-            }
+            var isPrimitiveLike = type.IsValueType || type == typeof(string);
 
             //singleton instance already instantiated
-            if (dependency.Instance != null && dependency.Lifetime == DependencyLifetime.Singleton)
+            if (dependency?.Instance != null && dependency.Lifetime == DependencyLifetime.Singleton)
             {
+                //return cached instance
                 return dependency.Instance;
+            }
+
+            if (isPrimitiveLike)
+            {
+                //not registered in DI container
+                if (dependency == null)
+                {
+                    if (declaredDefault != null)
+                    {
+                        //use declared default value
+                        return declaredDefault;
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException("No declared default value and no registered value for value type or string");
+                    }
+                }
+                else
+                {
+                    if (dependency.Lifetime == DependencyLifetime.Singleton)
+                    {
+                        dependency.CacheInstance(dependency.RegisteredValue!);
+                    }
+                    //use registered value
+                    return dependency.RegisteredValue;
+                }
+            }
+
+            //reference type not registered in DI container
+            if (dependency == null)
+            {
+                throw new InvalidOperationException($"Service of type {type.Name} is not registered");
             }
 
             //service can have further dependencies passed into its constructor
@@ -37,13 +65,13 @@ namespace LambdaPulse.DI
 
             var parameters = constructor.GetParameters();
 
-            //holds the instantiated dependency params
+            //holds the resolved parameter instances
             var parameterInstances = new List<object>();
 
             foreach (var parameter in parameters)
             {
-                //instantiate the parameter (dependency of the dependency)
-                var instance = GetType(parameter.ParameterType);
+                //recursively resolve the parameters of the parameter
+                var instance = GetType(parameter.ParameterType, parameter.DefaultValue);
                 if (instance != null)
                 {
                     parameterInstances.Add(instance);
@@ -51,45 +79,51 @@ namespace LambdaPulse.DI
             }
 
             //create service instance with or without params
-            var masterInstance = (parameterInstances.Count > 0)
+            var serviceInstance = (parameterInstances.Count > 0)
                 ? Activator.CreateInstance(dependency.Type, parameterInstances.ToArray())
                 : Activator.CreateInstance(dependency.Type);
 
             //cache the singleton instance
             if (dependency.Lifetime == DependencyLifetime.Singleton)
             {
-                dependency.CacheInstance(masterInstance!);
+                dependency.CacheInstance(serviceInstance!);
             }
 
-            return masterInstance;
+            return serviceInstance;
         }
 
-        //use constructor with the most resolvable parameters
+        //return constructor with the most resolvable parameters
         private ConstructorInfo GetConstructor(Type type)
         {
             var orderedConstructors = type.GetConstructors().OrderByDescending(ctr => ctr.GetParameters().Length);
 
             foreach (var constructor in orderedConstructors)
             {
-                bool parametersResolvable = true;
+                bool allParametersResolvable = true;
 
                 foreach (var parameter in constructor.GetParameters())
                 {
-                    //value types without default value cannot be instantiated
-                    if (parameter.ParameterType.IsValueType && !parameter.HasDefaultValue)
+                    bool isPrimitiveLike = parameter.ParameterType.IsValueType || parameter.ParameterType == typeof(string);
+
+                    //primitiveLike types without declared default value
+                    if (isPrimitiveLike && !parameter.HasDefaultValue)
                     {
-                        parametersResolvable = false;
-                        break;
+                        //plus it's not been registered in DI container
+                        if (_container.GetDependency(parameter.ParameterType) == null)
+                        {
+                            allParametersResolvable = false;
+                            break;
+                        }
                     }
-                    //dependency not registered
-                    if (_container.GetDependency(parameter.ParameterType) == null)
+                    //reference type not registered in DI container
+                    if (!isPrimitiveLike && _container.GetDependency(parameter.ParameterType) == null)
                     {
-                        parametersResolvable = false;
+                        allParametersResolvable = false;
                         break;
                     }
                 }
 
-                if (parametersResolvable)
+                if (allParametersResolvable)
                 {
                     return constructor;
                 }
