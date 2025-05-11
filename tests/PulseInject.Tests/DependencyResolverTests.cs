@@ -8,11 +8,13 @@ namespace LambdaPulse.Tests.DI
         #region Service implementations
         public class DBUploadService
         {
-            private readonly ConsoleLogger? _logger;
+            private readonly ConsoleLogger _logger;
+            public int DBUploadInt { get; }
 
-            public DBUploadService(ConsoleLogger logger)
+            public DBUploadService(ConsoleLogger logger, int i = 1)
             {
                 _logger = logger;
+                DBUploadInt = i;
             }
 
             public void UploadFile()
@@ -20,15 +22,20 @@ namespace LambdaPulse.Tests.DI
                 Console.WriteLine($"Uploaded to DB");
                 _logger?.Log("Logged successful upload");
             }
+            public int GetLoggerInt()
+            {
+                return _logger.LoggerInt;
+            }
+            public int GetConfigInt()
+            {
+                return _logger.GetConfigInt();
+            }
         }
 
         public class AzureUploadService
         {
-            private readonly ConsoleLogger? _logger;
+            private readonly ConsoleLogger _logger;
 
-            public AzureUploadService()
-            {
-            }
             public AzureUploadService(ConsoleLogger logger)
             {
                 _logger = logger;
@@ -44,21 +51,27 @@ namespace LambdaPulse.Tests.DI
         public class ConsoleLogger
         {
             private readonly ConfigurationManager _configurationManager;
-            public ConsoleLogger(ConfigurationManager configurationManager)
+            public int LoggerInt { get; }
+            public ConsoleLogger(ConfigurationManager configurationManager, int i = 2)
             {
                 _configurationManager = configurationManager;
+                LoggerInt = i;
             }
             public void Log(string message)
             {
                 Console.WriteLine($"{message} println into console.");
                 Console.WriteLine($"Config string: {_configurationManager.ConfigString}");
             }
+            public int GetConfigInt()
+            {
+                return _configurationManager.ConfigInt;
+            }
         }
         public class DBLogger
         {
             private readonly ConfigurationManager _configurationManager;
 
-            public DBLogger(ConfigurationManager configurationManager, int param1 = 12)
+            public DBLogger(ConfigurationManager configurationManager, int i = 3)
             {
                 _configurationManager = configurationManager;
             }
@@ -93,6 +106,17 @@ namespace LambdaPulse.Tests.DI
                 ConfigBool = param3;
             }
         }
+
+        public class ServiceA
+        {
+            public ServiceA(ServiceB serviceB) { }
+        }
+
+        public class ServiceB
+        {
+            public ServiceB(ServiceA serviceA) { }
+        }
+
 
         #endregion Service implementations
 
@@ -188,6 +212,48 @@ namespace LambdaPulse.Tests.DI
             Assert.NotNull(service);
             Assert.NotNull(dependency?.Instance);
             Assert.Equal(dependency?.Instance, service);
+        }
+
+        //TEST 6
+        [Fact]
+        public void GetType_RegisteredValueTakesPrecedenceOverDeclaredDefault()
+        {
+            //arrange
+            var container = new DependencyContainer();
+
+            container.AddSingleton<DBUploadService>();
+            container.AddSingleton<ConsoleLogger>();
+            container.AddSingleton<ConfigurationManager>();
+            container.AddSingleton<int>(55);
+
+            var resolver = new DependencyResolver(container);
+
+            //act
+            var service = resolver.GetService<DBUploadService>();
+
+            //assert
+            Assert.NotNull(service);
+            Assert.Equal(55, service.DBUploadInt);
+            Assert.Equal(55, service.GetLoggerInt());
+            Assert.Equal(55, service.GetConfigInt());
+        }
+
+        //TEST 7
+        [Fact]
+        public void GetType_DetectCircularDependency()
+        {
+            //arrange
+            var container = new DependencyContainer();
+            container.AddSingleton<ServiceA>();
+            container.AddSingleton<ServiceB>();
+
+            var resolver = new DependencyResolver(container);
+
+            //act & assert
+            Assert.Throws<InvalidOperationException>(() =>
+            {
+                var service = resolver.GetService<ServiceA>();
+            });
         }
     }
 }

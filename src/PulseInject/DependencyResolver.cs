@@ -16,15 +16,35 @@ namespace LambdaPulse.DI
             return (T?)GetType(typeof(T));
         }
 
-        private object? GetType(Type type, object? declaredDefault = null)
+        private object? GetType(Type type, object? declaredDefault = null, Dictionary<Type, object?>? instantiationCache = null)
         {
-            var dependency = _container.GetDependency(type);
             var isPrimitiveLike = type.IsValueType || type == typeof(string);
+
+            //holds all instances of the entire resolution tree
+            instantiationCache ??= new Dictionary<Type, object?>();
+
+            if (!isPrimitiveLike)
+            {
+                if (instantiationCache.TryGetValue(type, out var cachedInstance))
+                {
+                    if (cachedInstance == null)
+                    {
+                        throw new InvalidOperationException($"Circular dependency for type {type}");
+                    }
+                    return cachedInstance;
+                }
+            }
+
+            //placeholder to prevent circular dependency (resolution is depth first)
+            instantiationCache[type] = null;
+
+            //get registered dependency
+            var dependency = _container.GetDependency(type);
 
             //singleton instance already instantiated
             if (dependency?.Instance != null && dependency.Lifetime == DependencyLifetime.Singleton)
             {
-                //return cached instance
+                instantiationCache[type] = dependency.Instance;
                 return dependency.Instance;
             }
 
@@ -65,13 +85,13 @@ namespace LambdaPulse.DI
 
             var parameters = constructor.GetParameters();
 
-            //holds the resolved parameter instances
+            //holds instances for the current constructor in context
             var parameterInstances = new List<object>();
 
             foreach (var parameter in parameters)
             {
                 //recursively resolve the parameters of the parameter
-                var instance = GetType(parameter.ParameterType, parameter.DefaultValue);
+                var instance = GetType(parameter.ParameterType, parameter.DefaultValue, instantiationCache);
                 if (instance != null)
                 {
                     parameterInstances.Add(instance);
@@ -89,6 +109,7 @@ namespace LambdaPulse.DI
                 dependency.CacheInstance(serviceInstance!);
             }
 
+            instantiationCache[type] = serviceInstance;
             return serviceInstance;
         }
 
