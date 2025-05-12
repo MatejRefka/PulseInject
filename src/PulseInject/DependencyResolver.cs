@@ -33,10 +33,9 @@ namespace LambdaPulse.DI
                     }
                     return cachedInstance;
                 }
+                //placeholder to prevent circular dependency (resolution is depth first)
+                instantiationCache[type] = null;
             }
-
-            //placeholder to prevent circular dependency (resolution is depth first)
-            instantiationCache[type] = null;
 
             //get registered dependency
             var dependency = _container.GetDependency(type);
