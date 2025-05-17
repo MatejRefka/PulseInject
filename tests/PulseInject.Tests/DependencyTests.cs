@@ -15,13 +15,13 @@ namespace LambdaPulse.Tests.DI
             var dependency = new Dependency(expectedType, expectedLifetime);
 
             //assert
-            Assert.Equal(expectedType, dependency.Type);
+            Assert.Equal(expectedType, dependency.ImplementationType);
             Assert.Equal(expectedLifetime, dependency.Lifetime);
             Assert.Null(dependency.Instance);
         }
 
         [Fact]
-        public void CacheInstance_SetInstanceWhenNull()
+        public void CacheInstance_SetCacheInstance()
         {
             //arrange
             var dependency = new Dependency(typeof(string), DependencyLifetime.Transient);
@@ -35,7 +35,7 @@ namespace LambdaPulse.Tests.DI
         }
 
         [Fact]
-        public void CacheInstance_SetInstanceWhenNotNull()
+        public void CacheInstance_ThrowForSettingCacheInstanceTwice()
         {
             //arrange
             var dependency = new Dependency(typeof(string), DependencyLifetime.Singleton);

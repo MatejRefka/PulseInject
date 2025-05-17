@@ -3,22 +3,24 @@
     public class Dependency
     {
         public object? Instance { get; private set; }
-        public Type Type { get; }
+        public Type? AbstractType { get; }
+        public Type ImplementationType { get; }
         public DependencyLifetime Lifetime { get; }
         public object? RegisteredValue { get; }
 
-        public Dependency(Type type, DependencyLifetime lifetime, object? param = null)
+        public Dependency(Type implementationType, DependencyLifetime lifetime, Type? abstractType = null, object? registeredValue = null)
         {
-            Type = type;
+            AbstractType = abstractType;
+            ImplementationType = implementationType;
             Lifetime = lifetime;
-            RegisteredValue = param;
+            RegisteredValue = registeredValue;
         }
 
         public void CacheInstance(object instance)
         {
             if (Instance != null)
             {
-                throw new InvalidOperationException($"Instance of type {Type.Name} has already been set.");
+                throw new InvalidOperationException($"Instance of type {ImplementationType.Name} has already been set.");
             }
             Instance = instance;
         }

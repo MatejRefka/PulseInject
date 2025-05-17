@@ -6,7 +6,13 @@ namespace LambdaPulse.Tests.DI
     {
 
         #region Service implementations
-        public class DBUploadService
+
+        public interface IUploadService
+        {
+            public void UploadFile();
+        }
+
+        public class DBUploadService : IUploadService
         {
             private readonly ConsoleLogger _logger;
             public int DBUploadInt { get; }
@@ -32,7 +38,7 @@ namespace LambdaPulse.Tests.DI
             }
         }
 
-        public class AzureUploadService
+        public class AzureUploadService : IUploadService
         {
             private readonly ConsoleLogger _logger;
 
@@ -143,7 +149,7 @@ namespace LambdaPulse.Tests.DI
 
         //TEST 2
         [Fact]
-        public void GetType_ResolveUndeclaredDefault()
+        public void GetType_ThrowForUndeclaredDefault()
         {
             //arrange
             var container = new DependencyContainer();
@@ -179,24 +185,41 @@ namespace LambdaPulse.Tests.DI
 
         //TEST 4
         [Fact]
-        public void GetType_ResolveUnregisteredReferenceType()
+        public void GetType_ThrowForUnregisteredTopLevelConcreteType()
         {
             //arrange
             var container = new DependencyContainer();
-            container.AddSingleton<ConfigurationManager>();
+            container.AddSingleton<DBUploadService>();
 
             var resolver = new DependencyResolver(container);
 
             //act & assert
             Assert.Throws<InvalidOperationException>(() =>
             {
-                var service = resolver.GetService<DBUploadService>();
+                var service = resolver.GetService<ConfigurationManager>();
             });
+        }
+
+        //TEST 4.5
+        [Fact]
+        public void GetType_ResolveUnregisteredConcreteTypeAsDependency()
+        {
+            //arrange
+            var container = new DependencyContainer();
+            container.AddSingleton<DBUploadService>();
+
+            var resolver = new DependencyResolver(container);
+
+            //act & assert
+            var service = resolver.GetService<DBUploadService>();
+
+            //assert
+            Assert.NotNull(service);
         }
 
         //TEST 5
         [Fact]
-        public void GetType_GetCachedInstance()
+        public void GetType_GetCachedSingletonInstance()
         {
             //arrange
             var container = new DependencyContainer();
@@ -254,6 +277,24 @@ namespace LambdaPulse.Tests.DI
             {
                 var service = resolver.GetService<ServiceA>();
             });
+        }
+
+        //TEST 8
+        [Fact]
+        public void GetType_ResolveAbstractService()
+        {
+            //arrange
+            var container = new DependencyContainer();
+            container.AddSingleton<IUploadService, AzureUploadService>();
+
+            var resolver = new DependencyResolver(container);
+
+            //act
+            var service = resolver.GetService<IUploadService>();
+
+            //assert
+            Assert.NotNull(service);
+            Assert.IsType<AzureUploadService>(service);
         }
     }
 }

@@ -16,9 +16,10 @@ namespace LambdaPulse.DI
             return (T?)GetType(typeof(T));
         }
 
-        private object? GetType(Type type, object? declaredDefault = null, Dictionary<Type, object?>? instantiationCache = null)
+        private object? GetType(Type type, bool isTopLevelType = true, object? declaredDefault = null, Dictionary<Type, object?>? instantiationCache = null)
         {
             var isPrimitiveLike = type.IsValueType || type == typeof(string);
+            var isAbstractType = type.IsInterface || type.IsAbstract;
 
             //holds all instances of the entire resolution tree
             instantiationCache ??= new Dictionary<Type, object?>();
@@ -73,10 +74,23 @@ namespace LambdaPulse.DI
                 }
             }
 
-            //reference type not registered in DI container
-            if (dependency == null)
+            if (isAbstractType)
             {
-                throw new InvalidOperationException($"Service of type {type.Name} is not registered");
+                //abstract type not registered in DI container
+                if (dependency == null)
+                {
+                    throw new InvalidOperationException($"Service of type {type.Name} is not registered");
+                }
+                //resolve the implementation
+                type = dependency.ImplementationType;
+            }
+            else if (isTopLevelType)
+            {
+                //top-level concrete type not registered in DI container
+                if (dependency == null)
+                {
+                    throw new InvalidOperationException($"Top-level concrete type {type.Name} is not registered");
+                }
             }
 
             //service can have further dependencies passed into its constructor
@@ -90,7 +104,7 @@ namespace LambdaPulse.DI
             foreach (var parameter in parameters)
             {
                 //recursively resolve the parameters of the parameter
-                var instance = GetType(parameter.ParameterType, parameter.DefaultValue, instantiationCache);
+                var instance = GetType(parameter.ParameterType, isTopLevelType: false, declaredDefault: parameter.DefaultValue, instantiationCache: instantiationCache);
                 if (instance != null)
                 {
                     parameterInstances.Add(instance);
@@ -99,13 +113,16 @@ namespace LambdaPulse.DI
 
             //create service instance with or without params
             var serviceInstance = (parameterInstances.Count > 0)
-                ? Activator.CreateInstance(dependency.Type, parameterInstances.ToArray())
-                : Activator.CreateInstance(dependency.Type);
+                ? Activator.CreateInstance(type, parameterInstances.ToArray())
+                : Activator.CreateInstance(type);
 
             //cache the singleton instance
-            if (dependency.Lifetime == DependencyLifetime.Singleton)
+            if (dependency != null)
             {
-                dependency.CacheInstance(serviceInstance!);
+                if (dependency.Lifetime == DependencyLifetime.Singleton)
+                {
+                    dependency.CacheInstance(serviceInstance!);
+                }
             }
 
             instantiationCache[type] = serviceInstance;
@@ -124,6 +141,7 @@ namespace LambdaPulse.DI
                 foreach (var parameter in constructor.GetParameters())
                 {
                     bool isPrimitiveLike = parameter.ParameterType.IsValueType || parameter.ParameterType == typeof(string);
+                    bool isAbstractType = parameter.ParameterType.IsInterface || parameter.ParameterType.IsAbstract;
 
                     //primitiveLike types without declared default value
                     if (isPrimitiveLike && !parameter.HasDefaultValue)
@@ -135,8 +153,8 @@ namespace LambdaPulse.DI
                             break;
                         }
                     }
-                    //reference type not registered in DI container
-                    if (!isPrimitiveLike && _container.GetDependency(parameter.ParameterType) == null)
+                    //abstract type not registered in DI container
+                    if (isAbstractType && _container.GetDependency(parameter.ParameterType) == null)
                     {
                         allParametersResolvable = false;
                         break;
