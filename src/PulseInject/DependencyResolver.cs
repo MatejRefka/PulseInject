@@ -16,10 +16,23 @@ namespace LambdaPulse.DI
             return (T?)GetType(typeof(T));
         }
 
-        private object? GetType(Type type, bool isTopLevelType = true, object? declaredDefault = null, Dictionary<Type, object?>? instantiationCache = null)
+        private object? GetType(Type type, bool isTopLevelType = true, bool requestedBySingleton = false, object? declaredDefault = null, Dictionary<Type, object?>? instantiationCache = null)
         {
             var isPrimitiveLike = type.IsValueType || type == typeof(string);
             var isAbstractType = type.IsInterface || type.IsAbstract;
+            var dependency = _container.GetDependency(type);
+
+            //prevent transient or scoped dependencies within a singleton service
+            if (requestedBySingleton && dependency != null && dependency?.Lifetime != DependencyLifetime.Singleton)
+            {
+                throw new InvalidOperationException($"Cannot register {type} of {dependency!.Lifetime} life into Singleton dependency graph");
+            }
+
+            //all dependencies within this dependency graph must be singleton
+            if (dependency?.Lifetime == DependencyLifetime.Singleton)
+            {
+                requestedBySingleton = true;
+            }
 
             //holds all instances of the entire resolution tree
             instantiationCache ??= new Dictionary<Type, object?>();
@@ -37,9 +50,6 @@ namespace LambdaPulse.DI
                 //placeholder to prevent circular dependency (resolution is depth first)
                 instantiationCache[type] = null;
             }
-
-            //get registered dependency
-            var dependency = _container.GetDependency(type);
 
             //singleton instance already instantiated
             if (dependency?.Instance != null && dependency.Lifetime == DependencyLifetime.Singleton)
@@ -104,7 +114,7 @@ namespace LambdaPulse.DI
             foreach (var parameter in parameters)
             {
                 //recursively resolve the parameters of the parameter
-                var instance = GetType(parameter.ParameterType, isTopLevelType: false, declaredDefault: parameter.DefaultValue, instantiationCache: instantiationCache);
+                var instance = GetType(parameter.ParameterType, isTopLevelType: false, requestedBySingleton: requestedBySingleton, declaredDefault: parameter.DefaultValue, instantiationCache: instantiationCache);
                 if (instance != null)
                 {
                     parameterInstances.Add(instance);

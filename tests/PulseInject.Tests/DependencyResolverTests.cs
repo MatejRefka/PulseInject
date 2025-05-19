@@ -296,5 +296,23 @@ namespace LambdaPulse.Tests.DI
             Assert.NotNull(service);
             Assert.IsType<AzureUploadService>(service);
         }
+
+        //TEST 9
+        [Fact]
+        public void GetType_ThrowForTransientOrScopedDependenciesWithinSingletonService()
+        {
+            var container = new DependencyContainer();
+            container.AddTransient<IUploadService, AzureUploadService>();
+            container.AddSingleton<ConsoleLogger>();
+            container.AddScoped<ConfigurationManager>();
+
+            var resolver = new DependencyResolver(container);
+
+            //act & assert
+            Assert.Throws<InvalidOperationException>(() =>
+            {
+                var service = resolver.GetService<IUploadService>();
+            });
+        }
     }
 }
