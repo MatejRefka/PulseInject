@@ -13,17 +13,20 @@ namespace LambdaPulse.DI
 
         public T? GetService<T>()
         {
-            return (T?)GetType(typeof(T));
+            //context at each dependency of the resolution tree
+            var contex = new ResolutionContext();
+
+            return (T?)GetType(typeof(T), contex);
         }
 
-        private object? GetType(Type type, bool isTopLevelType = true, bool requestedBySingleton = false, object? declaredDefault = null, Dictionary<Type, object?>? instantiationCache = null)
+        private object? GetType(Type type, ResolutionContext context)
         {
             var isPrimitiveLike = type.IsValueType || type == typeof(string);
             var isAbstractType = type.IsInterface || type.IsAbstract;
             var dependency = _container.GetDependency(type);
 
             //prevent transient or scoped dependencies within a singleton service
-            if (requestedBySingleton && dependency != null && dependency?.Lifetime != DependencyLifetime.Singleton)
+            if (context.RequestedBySingleton && dependency != null && dependency?.Lifetime != DependencyLifetime.Singleton)
             {
                 throw new InvalidOperationException($"Cannot register {type} of {dependency!.Lifetime} life into Singleton dependency graph");
             }
@@ -31,15 +34,15 @@ namespace LambdaPulse.DI
             //all dependencies within this dependency graph must be singleton
             if (dependency?.Lifetime == DependencyLifetime.Singleton)
             {
-                requestedBySingleton = true;
+                context.RequestedBySingleton = true;
             }
 
             //holds all instances of the entire resolution tree
-            instantiationCache ??= new Dictionary<Type, object?>();
+            context.InstantiationCache ??= new Dictionary<Type, object?>();
 
             if (!isPrimitiveLike)
             {
-                if (instantiationCache.TryGetValue(type, out var cachedInstance))
+                if (context.InstantiationCache.TryGetValue(type, out var cachedInstance))
                 {
                     if (cachedInstance == null)
                     {
@@ -48,13 +51,13 @@ namespace LambdaPulse.DI
                     return cachedInstance;
                 }
                 //placeholder to prevent circular dependency (resolution is depth first)
-                instantiationCache[type] = null;
+                context.InstantiationCache[type] = null;
             }
 
             //singleton instance already instantiated
             if (dependency?.Instance != null && dependency.Lifetime == DependencyLifetime.Singleton)
             {
-                instantiationCache[type] = dependency.Instance;
+                context.InstantiationCache[type] = dependency.Instance;
                 return dependency.Instance;
             }
 
@@ -63,10 +66,10 @@ namespace LambdaPulse.DI
                 //not registered in DI container
                 if (dependency == null)
                 {
-                    if (declaredDefault != null)
+                    if (context.DeclaredDefault != null)
                     {
                         //use declared default value
-                        return declaredDefault;
+                        return context.DeclaredDefault;
                     }
                     else
                     {
@@ -94,7 +97,7 @@ namespace LambdaPulse.DI
                 //resolve the implementation
                 type = dependency.ImplementationType;
             }
-            else if (isTopLevelType)
+            else if (context.IsTopLevelType)
             {
                 //top-level concrete type not registered in DI container
                 if (dependency == null)
@@ -113,8 +116,11 @@ namespace LambdaPulse.DI
 
             foreach (var parameter in parameters)
             {
+                context.IsTopLevelType = false;
+                context.DeclaredDefault = parameter.DefaultValue;
+
                 //recursively resolve the parameters of the parameter
-                var instance = GetType(parameter.ParameterType, isTopLevelType: false, requestedBySingleton: requestedBySingleton, declaredDefault: parameter.DefaultValue, instantiationCache: instantiationCache);
+                var instance = GetType(parameter.ParameterType, context);
                 if (instance != null)
                 {
                     parameterInstances.Add(instance);
@@ -135,7 +141,7 @@ namespace LambdaPulse.DI
                 }
             }
 
-            instantiationCache[type] = serviceInstance;
+            context.InstantiationCache[type] = serviceInstance;
             return serviceInstance;
         }
 
