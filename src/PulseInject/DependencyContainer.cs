@@ -98,7 +98,6 @@
             }
 
             _dependencies.Add(new Dependency(typeof(T), DependencyLifetime.Transient, registeredValue: registeredValue));
-
         }
         public void AddTransient<TAbstraction, TImplementation>()
             where TImplementation : TAbstraction

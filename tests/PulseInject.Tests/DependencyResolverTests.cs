@@ -285,6 +285,7 @@ namespace LambdaPulse.Tests.DI
         {
             //arrange
             var container = new DependencyContainer();
+            container.AddSingleton<IUploadService, DBUploadService>();
             container.AddSingleton<IUploadService, AzureUploadService>();
 
             var resolver = new DependencyResolver(container);
