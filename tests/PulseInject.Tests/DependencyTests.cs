@@ -1,6 +1,6 @@
 ﻿using LambdaPulse.DI;
 
-namespace LambdaPulse.Tests.DI
+namespace LambdaPulse.Tests.Core.DI
 {
     public class DependencyTests
     {

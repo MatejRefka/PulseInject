@@ -1,6 +1,6 @@
 ﻿using LambdaPulse.DI;
 
-namespace LambdaPulse.Tests.DI
+namespace LambdaPulse.Tests.Core.DI
 {
     public class DependencyContainerTests
     {
@@ -27,7 +27,7 @@ namespace LambdaPulse.Tests.DI
             var container = new DependencyContainer();
 
             //act
-            container.AddScoped<int>(12);
+            container.AddScoped(12);
             var dependency = container.GetDependency(typeof(int));
 
             //assert
@@ -43,7 +43,7 @@ namespace LambdaPulse.Tests.DI
             var container = new DependencyContainer();
 
             //act
-            container.AddTransient<string>("hello");
+            container.AddTransient("hello");
             var dependency = container.GetDependency(typeof(string));
 
             //assert
@@ -61,7 +61,7 @@ namespace LambdaPulse.Tests.DI
             //act & assert
             Assert.Throws<InvalidOperationException>(() =>
             {
-                container.AddSingleton<object>(new object());
+                container.AddSingleton(new object());
             });
         }
 
@@ -84,7 +84,7 @@ namespace LambdaPulse.Tests.DI
         {
             //arrange
             var container = new DependencyContainer();
-            container.AddTransient<int>(12);
+            container.AddTransient(12);
             container.AddScoped<IList<int>, List<int>>();
 
             //act
@@ -108,8 +108,8 @@ namespace LambdaPulse.Tests.DI
         {
             //arrange
             var container = new DependencyContainer();
-            container.AddSingleton<int>(21);
-            container.AddSingleton<int>(12);
+            container.AddSingleton(21);
+            container.AddSingleton(12);
 
             var resolver = new DependencyResolver(container);
 

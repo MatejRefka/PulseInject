@@ -128,7 +128,7 @@ namespace LambdaPulse.DI
             }
 
             //create service instance with or without params
-            var serviceInstance = (parameterInstances.Count > 0)
+            var serviceInstance = parameterInstances.Count > 0
                 ? Activator.CreateInstance(type, parameterInstances.ToArray())
                 : Activator.CreateInstance(type);
 

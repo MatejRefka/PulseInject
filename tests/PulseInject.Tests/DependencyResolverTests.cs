@@ -1,6 +1,6 @@
 ﻿using LambdaPulse.DI;
 
-namespace LambdaPulse.Tests.DI
+namespace LambdaPulse.Tests.Core.DI
 {
     public class DependencyResolverTests
     {
@@ -210,7 +210,7 @@ namespace LambdaPulse.Tests.DI
 
             var resolver = new DependencyResolver(container);
 
-            //act & assert
+            //act
             var service = resolver.GetService<DBUploadService>();
 
             //assert
