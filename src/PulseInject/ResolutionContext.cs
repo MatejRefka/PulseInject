@@ -1,6 +1,6 @@
 ﻿namespace LambdaPulse.DI
 {
-    public class ResolutionContext
+    public sealed class ResolutionContext
     {
         public bool IsTopLevelType { get; set; } = true;
         public bool RequestedBySingleton { get; set; } = false;

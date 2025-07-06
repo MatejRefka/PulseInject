@@ -2,7 +2,7 @@
 
 namespace LambdaPulse.DI
 {
-    public class DependencyResolver
+    public sealed class DependencyResolver
     {
         private readonly DependencyContainer _container;
 

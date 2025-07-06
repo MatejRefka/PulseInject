@@ -1,6 +1,6 @@
 ﻿namespace LambdaPulse.DI
 {
-    public class DependencyContainer
+    public sealed class DependencyContainer
     {
         private readonly List<Dependency> _dependencies = [];
 

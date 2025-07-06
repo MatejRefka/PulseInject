@@ -1,6 +1,6 @@
 ﻿namespace LambdaPulse.DI
 {
-    public class Dependency
+    public sealed class Dependency
     {
         public object? Instance { get; private set; }
         public Type? AbstractType { get; }
