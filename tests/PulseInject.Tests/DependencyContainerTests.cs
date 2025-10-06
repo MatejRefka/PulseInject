@@ -1,123 +1,122 @@
 ﻿using LambdaPulse.DI;
 
-namespace LambdaPulse.Tests.Core.DI
+namespace LambdaPulse.Tests.Core.DI;
+
+public class DependencyContainerTests
 {
-    public class DependencyContainerTests
+    [Fact]
+    public void AddSingleton_AddSingletonDependency()
     {
-        [Fact]
-        public void AddSingleton_AddSingletonDependency()
+        //arrange
+        var container = new DependencyContainer();
+
+        //act
+        container.AddSingleton<object>();
+        var dependency = container.GetDependency(typeof(object));
+
+        //assert
+        Assert.NotNull(dependency);
+        Assert.Equal(typeof(object), dependency.ImplementationType);
+        Assert.Equal(DependencyLifetime.Singleton, dependency.Lifetime);
+    }
+
+    [Fact]
+    public void AddScoped_AddScopedDependency()
+    {
+        //arrange
+        var container = new DependencyContainer();
+
+        //act
+        container.AddScoped(12);
+        var dependency = container.GetDependency(typeof(int));
+
+        //assert
+        Assert.NotNull(dependency);
+        Assert.Equal(typeof(int), dependency.ImplementationType);
+        Assert.Equal(DependencyLifetime.Scoped, dependency.Lifetime);
+    }
+
+    [Fact]
+    public void AddTransient_AddTransientDependency()
+    {
+        //arrange
+        var container = new DependencyContainer();
+
+        //act
+        container.AddTransient("hello");
+        var dependency = container.GetDependency(typeof(string));
+
+        //assert
+        Assert.NotNull(dependency);
+        Assert.Equal(typeof(string), dependency.ImplementationType);
+        Assert.Equal(DependencyLifetime.Transient, dependency.Lifetime);
+    }
+
+    [Fact]
+    public void AddSingleton_ThrowsForDeclaredReferenceType()
+    {
+        //arrange
+        var container = new DependencyContainer();
+
+        //act & assert
+        Assert.Throws<InvalidOperationException>(() =>
         {
-            //arrange
-            var container = new DependencyContainer();
+            container.AddSingleton(new object());
+        });
+    }
 
-            //act
-            container.AddSingleton<object>();
-            var dependency = container.GetDependency(typeof(object));
+    [Fact]
+    public void AddSingleton_ThrowsForInheritanceConcreteTypes()
+    {
+        //arrange
+        var container = new DependencyContainer();
 
-            //assert
-            Assert.NotNull(dependency);
-            Assert.Equal(typeof(object), dependency.ImplementationType);
-            Assert.Equal(DependencyLifetime.Singleton, dependency.Lifetime);
-        }
-
-        [Fact]
-        public void AddScoped_AddScopedDependency()
+        //act & assert
+        Assert.Throws<InvalidOperationException>(() =>
         {
-            //arrange
-            var container = new DependencyContainer();
-
-            //act
-            container.AddScoped(12);
-            var dependency = container.GetDependency(typeof(int));
-
-            //assert
-            Assert.NotNull(dependency);
-            Assert.Equal(typeof(int), dependency.ImplementationType);
-            Assert.Equal(DependencyLifetime.Scoped, dependency.Lifetime);
-        }
-
-        [Fact]
-        public void AddTransient_AddTransientDependency()
-        {
-            //arrange
-            var container = new DependencyContainer();
-
-            //act
-            container.AddTransient("hello");
-            var dependency = container.GetDependency(typeof(string));
-
-            //assert
-            Assert.NotNull(dependency);
-            Assert.Equal(typeof(string), dependency.ImplementationType);
-            Assert.Equal(DependencyLifetime.Transient, dependency.Lifetime);
-        }
-
-        [Fact]
-        public void AddSingleton_ThrowsForDeclaredReferenceType()
-        {
-            //arrange
-            var container = new DependencyContainer();
-
-            //act & assert
-            Assert.Throws<InvalidOperationException>(() =>
-            {
-                container.AddSingleton(new object());
-            });
-        }
-
-        [Fact]
-        public void AddSingleton_ThrowsForInheritanceConcreteTypes()
-        {
-            //arrange
-            var container = new DependencyContainer();
-
-            //act & assert
-            Assert.Throws<InvalidOperationException>(() =>
-            {
-                container.AddSingleton<Exception, InvalidCastException>();
-            });
-        }
+            container.AddSingleton<Exception, InvalidCastException>();
+        });
+    }
 
 
-        [Fact]
-        public void GetDependency_ReturnDependencyByType()
-        {
-            //arrange
-            var container = new DependencyContainer();
-            container.AddTransient(12);
-            container.AddScoped<IList<int>, List<int>>();
+    [Fact]
+    public void GetDependency_ReturnDependencyByType()
+    {
+        //arrange
+        var container = new DependencyContainer();
+        container.AddTransient(12);
+        container.AddScoped<IList<int>, List<int>>();
 
-            //act
-            var intService = container.GetDependency(typeof(int));
-            var interfaceService = container.GetDependency(typeof(IList<int>));
+        //act
+        var intService = container.GetDependency(typeof(int));
+        var interfaceService = container.GetDependency(typeof(IList<int>));
 
-            //assert
-            Assert.NotNull(intService);
-            Assert.Null(intService.AbstractType);
-            Assert.Equal(typeof(int), intService.ImplementationType);
-            Assert.Equal(DependencyLifetime.Transient, intService.Lifetime);
+        //assert
+        Assert.NotNull(intService);
+        Assert.Null(intService.AbstractType);
+        Assert.Equal(typeof(int), intService.ImplementationType);
+        Assert.Equal(DependencyLifetime.Transient, intService.Lifetime);
 
-            Assert.NotNull(interfaceService);
-            Assert.Equal(typeof(IList<int>), interfaceService.AbstractType);
-            Assert.Equal(typeof(List<int>), interfaceService.ImplementationType);
-            Assert.Equal(DependencyLifetime.Scoped, interfaceService.Lifetime);
-        }
+        Assert.NotNull(interfaceService);
+        Assert.Equal(typeof(IList<int>), interfaceService.AbstractType);
+        Assert.Equal(typeof(List<int>), interfaceService.ImplementationType);
+        Assert.Equal(DependencyLifetime.Scoped, interfaceService.Lifetime);
+    }
 
-        [Fact]
-        public void GetDependency_ResolveLatestRegisteredType()
-        {
-            //arrange
-            var container = new DependencyContainer();
-            container.AddSingleton(21);
-            container.AddSingleton(12);
+    [Fact]
+    public void GetDependency_ResolveLatestRegisteredType()
+    {
+        //arrange
+        var container = new DependencyContainer();
+        container.AddSingleton(21);
+        container.AddSingleton(12);
 
-            var resolver = new DependencyResolver(container);
+        var resolver = new DependencyResolver(container);
 
-            //act
-            var intService = resolver.GetService<int>();
+        //act
+        var intService = resolver.GetService<int>();
 
-            //assert
-            Assert.Equal(12, intService);
-        }
+        //assert
+        Assert.Equal(12, intService);
     }
 }

@@ -1,9 +1,8 @@
-﻿namespace LambdaPulse.DI
+﻿namespace LambdaPulse.DI;
+
+public enum DependencyLifetime
 {
-    public enum DependencyLifetime
-    {
-        Singleton = 0,
-        Scoped = 1,
-        Transient = 2
-    }
+    Singleton = 0,
+    Scoped = 1,
+    Transient = 2
 }
