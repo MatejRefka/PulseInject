@@ -72,12 +72,8 @@ public class DependencyContainerTests
         var container = new DependencyContainer();
 
         //act & assert
-        Assert.Throws<InvalidOperationException>(() =>
-        {
-            container.AddSingleton<Exception, InvalidCastException>();
-        });
+        Assert.Throws<InvalidOperationException>(container.AddSingleton<Exception, InvalidCastException>);
     }
-
 
     [Fact]
     public void GetDependency_ReturnDependencyByType()

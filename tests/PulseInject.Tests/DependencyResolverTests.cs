@@ -6,7 +6,6 @@ public class DependencyResolverTests
 {
 
     #region Service implementations
-
     public interface IUploadService
     {
         public void UploadFile();
@@ -123,6 +122,16 @@ public class DependencyResolverTests
         public ServiceB(ServiceA serviceA) { }
     }
 
+    public interface IConfigProvider { }
+    public class ConfigProvider : IConfigProvider { }
+    public class ConfigConsumerA
+    {
+        public ConfigConsumerA(ConfigConsumerB consumerB, IConfigProvider provider) { }
+    }
+    public class ConfigConsumerB
+    {
+        public ConfigConsumerB(IConfigProvider provider) { }
+    }
 
     #endregion Service implementations
 
@@ -314,5 +323,24 @@ public class DependencyResolverTests
         {
             var service = resolver.GetService<IUploadService>();
         });
+    }
+
+    [Fact]
+    public void GetType_ResolveSharedAbstractType()
+    {
+        //arrange
+        var container = new DependencyContainer();
+        container.AddSingleton<IConfigProvider, ConfigProvider>();
+        container.AddSingleton<ConfigConsumerA>();
+        container.AddSingleton<ConfigConsumerB>();
+
+        var resolver = new DependencyResolver(container);
+
+        //act
+        var service = resolver.GetService<ConfigConsumerA>();
+
+        //assert
+        Assert.NotNull(service);
+        Assert.IsType<ConfigConsumerA>(service);
     }
 }

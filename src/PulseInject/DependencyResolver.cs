@@ -21,6 +21,7 @@ public sealed class DependencyResolver
 
     private object? GetType(Type type, ResolutionContext context)
     {
+        var requestedType = type;
         var isPrimitiveLike = type.IsValueType || type == typeof(string);
         var isAbstractType = type.IsInterface || type.IsAbstract;
         var dependency = _container.GetDependency(type);
@@ -37,11 +38,12 @@ public sealed class DependencyResolver
             context.RequestedBySingleton = true;
         }
 
-        //holds all instances of the entire resolution tree
+        //holds instances of the entire resolution tree
         context.InstantiationCache ??= new Dictionary<Type, object?>();
 
         if (!isPrimitiveLike)
         {
+            //instance is fully instantiated
             if (context.InstantiationCache.TryGetValue(type, out var cachedInstance))
             {
                 if (cachedInstance == null)
@@ -141,7 +143,12 @@ public sealed class DependencyResolver
             }
         }
 
+        //cache instance under abstraction and implementation types
         context.InstantiationCache[type] = serviceInstance;
+        if (requestedType != type)
+        {
+            context.InstantiationCache[requestedType] = serviceInstance;
+        }
         return serviceInstance;
     }
 
