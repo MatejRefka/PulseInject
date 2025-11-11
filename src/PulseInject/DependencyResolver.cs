@@ -14,9 +14,18 @@ public sealed class DependencyResolver
     public T? GetService<T>()
     {
         //context at each dependency of the resolution tree
-        var contex = new ResolutionContext();
+        var context = new ResolutionContext();
 
-        return (T?)GetType(typeof(T), contex);
+        return (T?)GetType(typeof(T), context);
+    }
+
+    //overload for public outsider usage
+    public object? GetService(Type type)
+    {
+        //context at each dependency of the resolution tree
+        var context = new ResolutionContext();
+        var instance = GetType(type, context);
+        return instance;
     }
 
     private object? GetType(Type type, ResolutionContext context)
