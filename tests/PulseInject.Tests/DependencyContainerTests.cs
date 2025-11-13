@@ -53,7 +53,25 @@ public class DependencyContainerTests
     }
 
     [Fact]
-    public void AddSingleton_ThrowsForDeclaredReferenceType()
+    public void AddSingleton_AddDeclaredReferenceType()
+    {
+        //arrange
+        var container = new DependencyContainer();
+        var ex = new Exception("Default exception");
+
+        //act 
+        container.AddSingleton(ex);
+        var dependency = container.GetDependency(typeof(Exception));
+
+        //assert
+        Assert.NotNull(dependency);
+        Assert.Equal(typeof(Exception), dependency.ImplementationType);
+        Assert.Equal(DependencyLifetime.Singleton, dependency.Lifetime);
+        Assert.Equal(ex, dependency.Instance);
+    }
+
+    [Fact]
+    public void AddScoped_ThrowsForDeclaredReferenceType()
     {
         //arrange
         var container = new DependencyContainer();
@@ -61,7 +79,20 @@ public class DependencyContainerTests
         //act & assert
         Assert.Throws<InvalidOperationException>(() =>
         {
-            container.AddSingleton(new object());
+            container.AddScoped(new object());
+        });
+    }
+
+    [Fact]
+    public void AddTransient_ThrowsForDeclaredReferenceType()
+    {
+        //arrange
+        var container = new DependencyContainer();
+
+        //act & assert
+        Assert.Throws<InvalidOperationException>(() =>
+        {
+            container.AddTransient(new object());
         });
     }
 

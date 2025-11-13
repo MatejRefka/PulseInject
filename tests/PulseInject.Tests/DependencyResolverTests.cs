@@ -246,6 +246,28 @@ public class DependencyResolverTests
         Assert.Equal(dependency?.Instance, service);
     }
 
+    //TEST 5.5
+    [Fact]
+    public void GetType_GetRegisteredReferenceTypeInstance()
+    {
+        //arrange
+        var container = new DependencyContainer();
+        var ex = new Exception("Default Exception");
+        container.AddSingleton(ex);
+        var dependency = container.GetDependency(typeof(Exception));
+
+        var resolver = new DependencyResolver(container);
+
+        //act
+        var service = resolver.GetService<Exception>();
+
+        //assert
+        Assert.NotNull(service);
+        Assert.NotNull(dependency?.Instance);
+        Assert.Equal(dependency?.Instance, service);
+        Assert.Equal(service, ex);
+    }
+
     //TEST 6
     [Fact]
     public void GetType_RegisteredValueTakesPrecedenceOverDeclaredDefault()

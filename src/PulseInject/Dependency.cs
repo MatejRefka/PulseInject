@@ -8,12 +8,13 @@ public sealed class Dependency
     public DependencyLifetime Lifetime { get; }
     public object? RegisteredValue { get; }
 
-    public Dependency(Type implementationType, DependencyLifetime lifetime, Type? abstractType = null, object? registeredValue = null)
+    public Dependency(Type implementationType, DependencyLifetime lifetime, Type? abstractType = null, object? registeredValue = null, object? instance = null)
     {
         AbstractType = abstractType;
         ImplementationType = implementationType;
         Lifetime = lifetime;
         RegisteredValue = registeredValue;
+        Instance = instance;
     }
 
     public void CacheInstance(object instance)

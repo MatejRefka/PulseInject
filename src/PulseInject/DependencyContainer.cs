@@ -16,17 +16,19 @@ public sealed class DependencyContainer
 
         _dependencies.Add(new Dependency(typeof(T), DependencyLifetime.Singleton));
     }
-    public void AddSingleton<T>(T registeredValue)
+    public void AddSingleton<T>(T value)
     {
         var type = typeof(T);
         var isPrimitiveLike = type.IsValueType || type == typeof(string);
 
-        if (!isPrimitiveLike)
+        if (isPrimitiveLike)
         {
-            throw new InvalidOperationException("Cannot register reference types by instance.");
+            _dependencies.Add(new Dependency(typeof(T), DependencyLifetime.Singleton, registeredValue: value));
         }
-
-        _dependencies.Add(new Dependency(typeof(T), DependencyLifetime.Singleton, registeredValue: registeredValue));
+        else
+        {
+            _dependencies.Add(new Dependency(typeof(T), DependencyLifetime.Singleton, instance: value));
+        }
     }
     public void AddSingleton<TAbstraction, TImplementation>()
         where TImplementation : TAbstraction
