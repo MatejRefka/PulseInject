@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
 
-namespace LambdaPulse.DI;
+namespace LambdaPulse.Server.DI;
 
 public sealed class DependencyResolver
 {

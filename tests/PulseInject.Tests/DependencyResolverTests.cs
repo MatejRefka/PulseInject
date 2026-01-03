@@ -1,4 +1,4 @@
-﻿using LambdaPulse.DI;
+﻿using LambdaPulse.Server.DI;
 
 namespace LambdaPulse.Tests.Core.DI;
 
