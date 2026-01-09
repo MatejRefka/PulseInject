@@ -146,4 +146,59 @@ public class DependencyContainerTests
         //assert
         Assert.Equal(12, intService);
     }
+
+    [Fact]
+    public void OverrideSingleton_OverrideTypeWithItself()
+    {
+        //arrange
+        var container = new DependencyContainer();
+        container.AddSingleton<object>();
+
+        //act
+        container.OverrideSingleton<object>();
+        var dependency = container.GetDependency(typeof(object));
+
+        //assert
+        Assert.NotNull(dependency);
+        Assert.Equal(typeof(object), dependency.ImplementationType);
+        Assert.Equal(DependencyLifetime.Singleton, dependency.Lifetime);
+    }
+
+    [Fact]
+    public void OverrideSingleton_OverrideTypeWithInstance()
+    {
+        // arrange
+        var container = new DependencyContainer();
+        container.AddSingleton<object>();
+
+        var instance = new object();
+
+        // act
+        container.OverrideSingleton(instance);
+        var dependency = container.GetDependency(typeof(object));
+
+        // assert
+        Assert.NotNull(dependency);
+        Assert.Equal(typeof(object), dependency.ImplementationType);
+        Assert.Equal(DependencyLifetime.Singleton, dependency.Lifetime);
+        Assert.Same(instance, dependency.Instance);
+    }
+
+    [Fact]
+    public void OverrideSingleton_OverrideRegisteredImplementation()
+    {
+        //arrange
+        var container = new DependencyContainer();
+        container.AddSingleton<ICollection<int>, List<int>>();
+
+        //act
+        container.OverrideSingleton<ICollection<int>, HashSet<int>>();
+        var dependency = container.GetDependency(typeof(ICollection<int>));
+
+        //assert
+        Assert.NotNull(dependency);
+        Assert.Equal(typeof(HashSet<int>), dependency.ImplementationType);
+        Assert.Equal(typeof(ICollection<int>), dependency.AbstractType);
+        Assert.Equal(DependencyLifetime.Singleton, dependency.Lifetime);
+    }
 }

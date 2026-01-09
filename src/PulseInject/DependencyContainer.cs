@@ -124,4 +124,70 @@ public sealed class DependencyContainer
             return _dependencies.LastOrDefault(d => d.ImplementationType == type);
         }
     }
+
+    public void OverrideSingleton<T>()
+    {
+        var type = typeof(T);
+        _dependencies.RemoveAll(d => d.AbstractType == type || (d.AbstractType == null && d.ImplementationType == type));
+
+        AddSingleton<T>();
+    }
+    public void OverrideSingleton<T>(T value)
+    {
+        var type = typeof(T);
+        _dependencies.RemoveAll(d => d.AbstractType == type || (d.AbstractType == null && d.ImplementationType == type));
+
+        AddSingleton<T>(value);
+    }
+    public void OverrideSingleton<TAbstraction, TImplementation>() where TImplementation : TAbstraction
+    {
+        var type = typeof(TAbstraction);
+
+        _dependencies.RemoveAll(d => d.AbstractType == type || (d.AbstractType == null && d.ImplementationType == type));
+        AddSingleton<TAbstraction, TImplementation>();
+    }
+
+    public void OverrideScoped<T>()
+    {
+        var type = typeof(T);
+        _dependencies.RemoveAll(d => d.AbstractType == type || (d.AbstractType == null && d.ImplementationType == type));
+
+        AddScoped<T>();
+    }
+    public void OverrideScoped<T>(T value)
+    {
+        var type = typeof(T);
+        _dependencies.RemoveAll(d => d.AbstractType == type || (d.AbstractType == null && d.ImplementationType == type));
+
+        AddScoped<T>(value);
+    }
+    public void OverrideScoped<TAbstraction, TImplementation>() where TImplementation : TAbstraction
+    {
+        var type = typeof(TAbstraction);
+
+        _dependencies.RemoveAll(d => d.AbstractType == type || (d.AbstractType == null && d.ImplementationType == type));
+        AddScoped<TAbstraction, TImplementation>();
+    }
+
+    public void OverrideTransient<T>()
+    {
+        var type = typeof(T);
+        _dependencies.RemoveAll(d => d.AbstractType == type || (d.AbstractType == null && d.ImplementationType == type));
+
+        AddTransient<T>();
+    }
+    public void OverrideTransient<T>(T value)
+    {
+        var type = typeof(T);
+        _dependencies.RemoveAll(d => d.AbstractType == type || (d.AbstractType == null && d.ImplementationType == type));
+
+        AddTransient<T>(value);
+    }
+    public void OverrideTransient<TAbstraction, TImplementation>() where TImplementation : TAbstraction
+    {
+        var type = typeof(TAbstraction);
+
+        _dependencies.RemoveAll(d => d.AbstractType == type || (d.AbstractType == null && d.ImplementationType == type));
+        AddTransient<TAbstraction, TImplementation>();
+    }
 }
