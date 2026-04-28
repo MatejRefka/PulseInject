@@ -57,17 +57,17 @@ public class DependencyContainerTests
     {
         //arrange
         var container = new DependencyContainer();
-        var ex = new Exception("Default exception");
+        var e = new Exception("Default exception");
 
         //act 
-        container.AddSingleton(ex);
+        container.AddSingleton(e);
         var dependency = container.GetDependency(typeof(Exception));
 
         //assert
         Assert.NotNull(dependency);
         Assert.Equal(typeof(Exception), dependency.ImplementationType);
         Assert.Equal(DependencyLifetime.Singleton, dependency.Lifetime);
-        Assert.Equal(ex, dependency.Instance);
+        Assert.Equal(e, dependency.Instance);
     }
 
     [Fact]
