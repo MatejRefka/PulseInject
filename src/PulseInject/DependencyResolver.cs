@@ -38,7 +38,7 @@ public sealed class DependencyResolver
         //prevent transient or scoped dependencies within a singleton service
         if (context.RequestedBySingleton && dependency != null && dependency?.Lifetime != DependencyLifetime.Singleton)
         {
-            throw new InvalidOperationException($"Cannot register {type} of {dependency!.Lifetime} life into Singleton dependency graph");
+            throw new InvalidOperationException($"Cannot register {type} of {dependency!.Lifetime} life into Singleton dependency graph.");
         }
 
         //all dependencies within this dependency graph must be singleton
@@ -57,7 +57,7 @@ public sealed class DependencyResolver
             {
                 if (cachedInstance == null)
                 {
-                    throw new InvalidOperationException($"Circular dependency for type {type}");
+                    throw new InvalidOperationException($"Circular dependency for type {type}.");
                 }
                 return cachedInstance;
             }
@@ -84,7 +84,7 @@ public sealed class DependencyResolver
                 }
                 else
                 {
-                    throw new InvalidOperationException("No declared default value and no registered value for value type or string");
+                    throw new InvalidOperationException("No declared default value and no registered value for value type or string.");
                 }
             }
             else
@@ -103,7 +103,7 @@ public sealed class DependencyResolver
             //abstract type not registered in DI container
             if (dependency == null)
             {
-                throw new InvalidOperationException($"Service of type {type.Name} is not registered");
+                throw new InvalidOperationException($"Service of type {type.Name} is not registered.");
             }
             //resolve the implementation
             type = dependency.ImplementationType;
@@ -113,7 +113,7 @@ public sealed class DependencyResolver
             //top-level concrete type not registered in DI container
             if (dependency == null)
             {
-                throw new InvalidOperationException($"Top-level concrete type {type.Name} is not registered");
+                throw new InvalidOperationException($"Top-level concrete type {type.Name} is not registered.");
             }
         }
 
@@ -198,6 +198,6 @@ public sealed class DependencyResolver
                 return constructor;
             }
         }
-        throw new NotImplementedException($"No suitable constructor found for {type.Name}");
+        throw new NotImplementedException($"No suitable constructor found for {type.Name}.");
     }
 }

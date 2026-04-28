@@ -11,7 +11,7 @@ public sealed class DependencyContainer
 
         if (isPrimitiveLike)
         {
-            throw new InvalidOperationException("Cannot register value type without an explicitly declared value");
+            throw new InvalidOperationException("Cannot register value type without an explicitly declared value.");
         }
 
         _dependencies.Add(new Dependency(typeof(T), DependencyLifetime.Singleton));
@@ -36,7 +36,7 @@ public sealed class DependencyContainer
         //avoid inheritance of concrete types
         if (!typeof(TAbstraction).IsInterface && !typeof(TAbstraction).IsAbstract)
         {
-            throw new InvalidOperationException("TAbstraction must be an interface or an abstract class");
+            throw new InvalidOperationException("TAbstraction must be an interface or an abstract class.");
         }
 
         _dependencies.Add(new Dependency(typeof(TImplementation), DependencyLifetime.Singleton, abstractType: typeof(TAbstraction)));
@@ -49,7 +49,7 @@ public sealed class DependencyContainer
 
         if (isPrimitiveLike)
         {
-            throw new InvalidOperationException("Cannot register value type without an explicitly declared value");
+            throw new InvalidOperationException("Cannot register value type without an explicitly declared value.");
         }
 
         _dependencies.Add(new Dependency(typeof(T), DependencyLifetime.Scoped));
@@ -72,7 +72,7 @@ public sealed class DependencyContainer
         //avoid inheritance of concrete types
         if (!typeof(TAbstraction).IsInterface && !typeof(TAbstraction).IsAbstract)
         {
-            throw new InvalidOperationException("TAbstraction must be an interface or an abstract class");
+            throw new InvalidOperationException("TAbstraction must be an interface or an abstract class.");
         }
 
         _dependencies.Add(new Dependency(typeof(TImplementation), DependencyLifetime.Scoped, abstractType: typeof(TAbstraction)));
@@ -84,7 +84,7 @@ public sealed class DependencyContainer
 
         if (isPrimitiveLike)
         {
-            throw new InvalidOperationException("Cannot register value type without an explicitly declared value");
+            throw new InvalidOperationException("Cannot register value type without an explicitly declared value.");
         }
 
         _dependencies.Add(new Dependency(typeof(T), DependencyLifetime.Transient));
@@ -107,7 +107,7 @@ public sealed class DependencyContainer
         //avoid inheritance of concrete types
         if (!typeof(TAbstraction).IsInterface && !typeof(TAbstraction).IsAbstract)
         {
-            throw new InvalidOperationException("TAbstraction must be an interface or an abstract class");
+            throw new InvalidOperationException("TAbstraction must be an interface or an abstract class.");
         }
 
         _dependencies.Add(new Dependency(typeof(TImplementation), DependencyLifetime.Transient, abstractType: typeof(TAbstraction)));
