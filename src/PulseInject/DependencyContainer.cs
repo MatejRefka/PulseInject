@@ -27,7 +27,15 @@ public sealed class DependencyContainer
         }
         else
         {
-            _dependencies.Add(new Dependency(typeof(T), DependencyLifetime.Singleton, instance: value));
+            if (value == null)
+            {
+                throw new InvalidOperationException("Cannot register null reference type instance.");
+            }
+
+            var abstractType = (type.IsInterface || type.IsAbstract) ? type : null;
+            var implementationType = (abstractType != null) ? value.GetType() : type;
+
+            _dependencies.Add(new Dependency(implementationType, DependencyLifetime.Singleton, abstractType: abstractType, instance: value));
         }
     }
     public void AddSingleton<TAbstraction, TImplementation>()
