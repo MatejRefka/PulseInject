@@ -1,4 +1,4 @@
-﻿namespace LambdaPulse.Engine.DI;
+﻿namespace PulseInject;
 
 public sealed class Dependency
 {

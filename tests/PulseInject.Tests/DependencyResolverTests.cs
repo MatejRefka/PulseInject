@@ -1,6 +1,4 @@
-﻿using LambdaPulse.Engine.DI;
-
-namespace LambdaPulse.Tests.Core.DI;
+﻿namespace PulseInject.Tests;
 
 public class DependencyResolverTests
 {

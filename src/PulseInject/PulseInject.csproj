@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		
+		<IsPackable>true</IsPackable>
+		<PackageId>PulseInject</PackageId>
+		<AssemblyName>PulseInject</AssemblyName>
+		<RootNamespace>PulseInject</RootNamespace>
+	</PropertyGroup>
+
+</Project>
