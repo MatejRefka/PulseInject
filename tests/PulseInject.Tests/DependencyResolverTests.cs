@@ -352,4 +352,22 @@ public class DependencyResolverTests
         Assert.IsType<List<int>>(service.ListA);
         Assert.Same(service.ListA, service.ListB);
     }
+
+    //TEST 17
+    [Fact]
+    public void GetType_GetRegisteredInterfaceInstance()
+    {
+        //arrange
+        DependencyContainer container = new();
+        IList<int> list = new List<int>();
+        container.AddSingleton<IList<int>>(list);
+
+        DependencyResolver resolver = new(container);
+
+        //act
+        IList<int>? service = resolver.GetService<IList<int>>();
+
+        //assert
+        Assert.Same(list, service);
+    }
 }
