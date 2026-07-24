@@ -1,296 +1,109 @@
-﻿namespace PulseInject.Tests;
+using System.Text;
+
+namespace PulseInject.Tests;
 
 public class DependencyResolverTests
 {
-
-    #region Service implementations
-    public interface IUploadService
+    #region Arrangement Classes
+    public sealed class ServiceA
     {
-        public void UploadFile();
-    }
-
-    public class DBUploadService : IUploadService
-    {
-        private readonly ConsoleLogger _logger;
-        public int DBUploadInt { get; }
-
-        public DBUploadService(ConsoleLogger logger, int i = 1)
+        public ServiceA(ServiceB service)
         {
-            _logger = logger;
-            DBUploadInt = i;
-        }
-
-        public void UploadFile()
-        {
-            Console.WriteLine($"Uploaded to DB");
-            _logger?.Log("Logged successful upload");
-        }
-        public int GetLoggerInt()
-        {
-            return _logger.LoggerInt;
-        }
-        public int GetConfigInt()
-        {
-            return _logger.GetConfigInt();
         }
     }
 
-    public class AzureUploadService : IUploadService
+    public sealed class ServiceB
     {
-        private readonly ConsoleLogger _logger;
-
-        public AzureUploadService(ConsoleLogger logger)
+        public ServiceB(ServiceA service)
         {
-            _logger = logger;
-        }
-
-        public void UploadFile()
-        {
-            Console.WriteLine($"Uploaded to Azure");
-            _logger?.Log("Logged successful upload");
         }
     }
 
-    public class ConsoleLogger
+    public sealed class ServiceC
     {
-        private readonly ConfigurationManager _configurationManager;
-        public int LoggerInt { get; }
-        public ConsoleLogger(ConfigurationManager configurationManager, int i = 2)
-        {
-            _configurationManager = configurationManager;
-            LoggerInt = i;
-        }
-        public void Log(string message)
-        {
-            Console.WriteLine($"{message} println into console.");
-            Console.WriteLine($"Config string: {_configurationManager.ConfigString}");
-        }
-        public int GetConfigInt()
-        {
-            return _configurationManager.ConfigInt;
-        }
-    }
-    public class DBLogger
-    {
-        private readonly ConfigurationManager _configurationManager;
+        public List<int> ListA { get; }
+        public List<int> ListB { get; }
 
-        public DBLogger(ConfigurationManager configurationManager, int i = 3)
+        public ServiceC(List<int> listA, List<int> listB)
         {
-            _configurationManager = configurationManager;
-        }
-        public void Log(string message)
-        {
-            Console.WriteLine($"{message} logged into DB.");
-            Console.WriteLine($"Config string: {_configurationManager.ConfigString}");
+            ListA = listA;
+            ListB = listB;
         }
     }
 
-    public class ConfigurationManager
+    public sealed class ServiceD
     {
-        public int ConfigInt { get; }
-        public string ConfigString { get; }
-        public bool ConfigBool { get; }
+        public int Value { get; }
 
-        public ConfigurationManager(int param1 = 12, string param2 = "param2")
+        public ServiceD(int value = 12)
         {
-            ConfigInt = param1;
-            ConfigString = param2;
-        }
-        public ConfigurationManager(int param1 = 12, string param2 = "param2", bool param3 = true)
-        {
-            ConfigInt = param1;
-            ConfigString = param2;
-            ConfigBool = param3;
-        }
-        public ConfigurationManager(int pram0, int param1 = 1, string param2 = "2", bool param3 = false)
-        {
-            ConfigInt = param1;
-            ConfigString = param2;
-            ConfigBool = param3;
+            Value = value;
         }
     }
 
-    public class ServiceA
+    public sealed class ServiceE
     {
-        public ServiceA(ServiceB serviceB) { }
+        public int Value { get; }
+
+        public ServiceE(int value)
+        {
+            Value = value;
+        }
     }
 
-    public class ServiceB
+    public sealed class ServiceF
     {
-        public ServiceB(ServiceA serviceA) { }
+        public StringBuilder Builder { get; }
+
+        public ServiceF(StringBuilder builder)
+        {
+            Builder = builder;
+        }
     }
 
-    public interface IConfigProvider { }
-    public class ConfigProvider : IConfigProvider { }
-    public class ConfigConsumerA
+    public sealed class ServiceG
     {
-        public ConfigConsumerA(ConfigConsumerB consumerB, IConfigProvider provider) { }
-    }
-    public class ConfigConsumerB
-    {
-        public ConfigConsumerB(IConfigProvider provider) { }
+        public IList<int> Values { get; }
+
+        public ServiceG(IList<int> values)
+        {
+            Values = values;
+        }
     }
 
-    #endregion Service implementations
+    public sealed class ServiceH
+    {
+        public IList<int> ListA { get; }
+        public IList<int> ListB { get; }
+
+        public ServiceH(IList<int> listA, IList<int> listB)
+        {
+            ListA = listA;
+            ListB = listB;
+        }
+    }
+
+    #endregion Arrangement Classes
 
     //TEST 1
     [Fact]
-    public void GetType_ResolveRegisteredValue()
+    public void GetType_ThrowForTransientOrScopedDependenciesWithinSingletonService()
     {
         //arrange
         var container = new DependencyContainer();
-        container.AddSingleton<bool>(true);
-        container.AddSingleton<string>("string1");
-        container.AddSingleton("string2");
+        container.AddSingleton<StreamReader>();
+        container.AddScoped<Stream, MemoryStream>();
 
         var resolver = new DependencyResolver(container);
 
-        //act
-        var boolService = resolver.GetService<bool>();
-        var stringService = resolver.GetService<string>();
-
-        //assert
-        Assert.True(boolService);
-        Assert.Equal("string2", stringService);
+        //act & assert
+        Assert.Throws<InvalidOperationException>(() =>
+        {
+            var service = resolver.GetService<StreamReader>();
+        });
     }
 
     //TEST 2
-    [Fact]
-    public void GetType_ThrowForUndeclaredDefault()
-    {
-        //arrange
-        var container = new DependencyContainer();
-
-        var resolver = new DependencyResolver(container);
-
-        //act & assert
-        Assert.Throws<InvalidOperationException>(() =>
-        {
-            var service = resolver.GetService<int>();
-        });
-    }
-
-    //TEST 3
-    [Fact]
-    public void GetType_ResolveDeclaredDefault()
-    {
-        //arrange
-        var container = new DependencyContainer();
-        container.AddSingleton<ConfigurationManager>();
-
-        var resolver = new DependencyResolver(container);
-
-        //act
-        var service = resolver.GetService<ConfigurationManager>();
-
-        //assert
-        Assert.NotNull(service);
-        Assert.Equal(12, service.ConfigInt);
-        Assert.Equal("param2", service.ConfigString);
-        Assert.True(service.ConfigBool);
-    }
-
-    //TEST 4
-    [Fact]
-    public void GetType_ThrowForUnregisteredTopLevelConcreteType()
-    {
-        //arrange
-        var container = new DependencyContainer();
-        container.AddSingleton<DBUploadService>();
-
-        var resolver = new DependencyResolver(container);
-
-        //act & assert
-        Assert.Throws<InvalidOperationException>(() =>
-        {
-            var service = resolver.GetService<ConfigurationManager>();
-        });
-    }
-
-    //TEST 4.5
-    [Fact]
-    public void GetType_ResolveUnregisteredConcreteTypeAsDependency()
-    {
-        //arrange
-        var container = new DependencyContainer();
-        container.AddSingleton<DBUploadService>();
-
-        var resolver = new DependencyResolver(container);
-
-        //act
-        var service = resolver.GetService<DBUploadService>();
-
-        //assert
-        Assert.NotNull(service);
-    }
-
-    //TEST 5
-    [Fact]
-    public void GetType_GetCachedSingletonInstance()
-    {
-        //arrange
-        var container = new DependencyContainer();
-        container.AddSingleton<ConfigurationManager>();
-        var dependency = container.GetDependency(typeof(ConfigurationManager));
-
-        var resolver = new DependencyResolver(container);
-
-        //act
-        var service = resolver.GetService<ConfigurationManager>();
-
-        //assert
-        Assert.NotNull(service);
-        Assert.NotNull(dependency?.Instance);
-        Assert.Equal(dependency?.Instance, service);
-    }
-
-    //TEST 5.5
-    [Fact]
-    public void GetType_GetRegisteredReferenceTypeInstance()
-    {
-        //arrange
-        var container = new DependencyContainer();
-        var ex = new Exception("Default Exception");
-        container.AddSingleton(ex);
-        var dependency = container.GetDependency(typeof(Exception));
-
-        var resolver = new DependencyResolver(container);
-
-        //act
-        var service = resolver.GetService<Exception>();
-
-        //assert
-        Assert.NotNull(service);
-        Assert.NotNull(dependency?.Instance);
-        Assert.Equal(dependency?.Instance, service);
-        Assert.Equal(service, ex);
-    }
-
-    //TEST 6
-    [Fact]
-    public void GetType_RegisteredValueTakesPrecedenceOverDeclaredDefault()
-    {
-        //arrange
-        var container = new DependencyContainer();
-
-        container.AddSingleton<DBUploadService>();
-        container.AddSingleton<ConsoleLogger>();
-        container.AddSingleton<ConfigurationManager>();
-        container.AddSingleton<int>(55);
-
-        var resolver = new DependencyResolver(container);
-
-        //act
-        var service = resolver.GetService<DBUploadService>();
-
-        //assert
-        Assert.NotNull(service);
-        Assert.Equal(55, service.DBUploadInt);
-        Assert.Equal(55, service.GetLoggerInt());
-        Assert.Equal(55, service.GetConfigInt());
-    }
-
-    //TEST 7
     [Fact]
     public void GetType_DetectCircularDependency()
     {
@@ -308,59 +121,235 @@ public class DependencyResolverTests
         });
     }
 
-    //TEST 8
+    //TEST 3
     [Fact]
-    public void GetType_ResolveAbstractService()
+    public void GetType_ReturnCachedInstance()
     {
         //arrange
-        var container = new DependencyContainer();
-        container.AddSingleton<IUploadService, DBUploadService>();
-        container.AddSingleton<IUploadService, AzureUploadService>();
+        DependencyContainer container = new();
+        container.AddScoped<List<int>>();
+        container.AddScoped<ServiceC>();
 
-        var resolver = new DependencyResolver(container);
+        DependencyResolver resolver = new(container);
 
         //act
-        var service = resolver.GetService<IUploadService>();
+        ServiceC service = Assert.IsType<ServiceC>(resolver.GetService<ServiceC>());
 
         //assert
-        Assert.NotNull(service);
-        Assert.IsType<AzureUploadService>(service);
+        Assert.Same(service.ListA, service.ListB);
+    }
+
+    //TEST 4
+    [Fact]
+    public void GetType_GetSingletonInstance()
+    {
+        //arrange
+        DependencyContainer container = new();
+        container.AddSingleton<StringBuilder>();
+
+        DependencyResolver resolver = new(container);
+
+        //act
+        StringBuilder firstService = Assert.IsType<StringBuilder>(resolver.GetService<StringBuilder>());
+        StringBuilder secondService = Assert.IsType<StringBuilder>(resolver.GetService<StringBuilder>());
+
+        //assert
+        Assert.Same(firstService, secondService);
+    }
+
+    //TEST 5
+    [Fact]
+    public void GetType_ResolveRegisteredValue()
+    {
+        //arrange
+        DependencyContainer container = new();
+        container.AddSingleton(true);
+        container.AddSingleton("first");
+        container.AddSingleton("second");
+
+        DependencyResolver resolver = new(container);
+
+        //act
+        bool boolService = resolver.GetService<bool>();
+        string? stringService = resolver.GetService<string>();
+
+        //assert
+        Assert.True(boolService);
+        Assert.Equal("second", stringService);
+    }
+
+    //TEST 6
+    [Fact]
+    public void GetType_ResolveDeclaredDefault()
+    {
+        //arrange
+        DependencyContainer container = new();
+        container.AddSingleton<ServiceD>();
+
+        DependencyResolver resolver = new(container);
+
+        //act
+        ServiceD service = Assert.IsType<ServiceD>(resolver.GetService<ServiceD>());
+
+        //assert
+        Assert.Equal(12, service.Value);
+    }
+
+    //TEST 7
+    [Fact]
+    public void GetType_ThrowForUndeclaredDefault()
+    {
+        //arrange
+        DependencyContainer container = new();
+
+        DependencyResolver resolver = new(container);
+
+        //act & assert
+        Assert.Throws<InvalidOperationException>(() => resolver.GetService<int>());
+    }
+
+    //TEST 8
+    [Fact]
+    public void GetType_ThrowForUnregisteredAbstractType()
+    {
+        //arrange
+        DependencyContainer container = new();
+
+        DependencyResolver resolver = new(container);
+
+        //act & assert
+        Assert.Throws<InvalidOperationException>(() => resolver.GetService<IList<int>>());
     }
 
     //TEST 9
     [Fact]
-    public void GetType_ThrowForTransientOrScopedDependenciesWithinSingletonService()
+    public void GetType_ThrowForUnregisteredTopLevelConcreteType()
     {
-        var container = new DependencyContainer();
-        container.AddTransient<IUploadService, AzureUploadService>();
-        container.AddSingleton<ConsoleLogger>();
-        container.AddScoped<ConfigurationManager>();
+        //arrange
+        DependencyContainer container = new();
+        container.AddSingleton<ServiceF>();
 
-        var resolver = new DependencyResolver(container);
+        DependencyResolver resolver = new(container);
 
         //act & assert
-        Assert.Throws<InvalidOperationException>(() =>
-        {
-            var service = resolver.GetService<IUploadService>();
-        });
+        Assert.Throws<InvalidOperationException>(() => resolver.GetService<StringBuilder>());
     }
 
+    //TEST 10
+    [Fact]
+    public void GetType_ThrowForUnregisteredAbstractConstructorParameter()
+    {
+        //arrange
+        DependencyContainer container = new();
+        container.AddSingleton<ServiceG>();
+
+        DependencyResolver resolver = new(container);
+
+        //act & assert
+        Assert.Throws<NotImplementedException>(() => resolver.GetService<ServiceG>());
+    }
+
+    //TEST 11
+    [Fact]
+    public void GetType_ThrowForUndeclaredConstructorDefault()
+    {
+        //arrange
+        DependencyContainer container = new();
+        container.AddSingleton<ServiceE>();
+
+        DependencyResolver resolver = new(container);
+
+        //act & assert
+        Assert.Throws<NotImplementedException>(() => resolver.GetService<ServiceE>());
+    }
+
+    //TEST 12
+    [Fact]
+    public void GetType_ResolveUnregisteredConcreteTypeAsDependency()
+    {
+        //arrange
+        DependencyContainer container = new();
+        container.AddSingleton<ServiceF>();
+
+        DependencyResolver resolver = new(container);
+
+        //act
+        ServiceF service = Assert.IsType<ServiceF>(resolver.GetService<ServiceF>());
+
+        //assert
+        Assert.IsType<StringBuilder>(service.Builder);
+    }
+
+    //TEST 13
+    [Fact]
+    public void GetType_GetRegisteredReferenceTypeInstance()
+    {
+        //arrange
+        DependencyContainer container = new();
+        StringBuilder builder = new("Hello");
+        container.AddSingleton(builder);
+
+        DependencyResolver resolver = new(container);
+
+        //act
+        StringBuilder service = Assert.IsType<StringBuilder>(resolver.GetService<StringBuilder>());
+
+        //assert
+        Assert.Same(builder, service);
+    }
+
+    //TEST 14
+    [Fact]
+    public void GetType_RegisteredValueTakesPrecedenceOverDeclaredDefault()
+    {
+        //arrange
+        DependencyContainer container = new();
+        container.AddSingleton<ServiceD>();
+        container.AddSingleton(42);
+
+        DependencyResolver resolver = new(container);
+
+        //act
+        ServiceD service = Assert.IsType<ServiceD>(resolver.GetService<ServiceD>());
+
+        //assert
+        Assert.Equal(42, service.Value);
+    }
+
+    //TEST 15
+    [Fact]
+    public void GetType_ResolveAbstractService()
+    {
+        //arrange
+        DependencyContainer container = new();
+        container.AddSingleton<ICollection<int>, List<int>>();
+        container.AddSingleton<ICollection<int>, HashSet<int>>();
+
+        DependencyResolver resolver = new(container);
+
+        //act
+        ICollection<int>? service = resolver.GetService<ICollection<int>>();
+
+        //assert
+        Assert.IsType<HashSet<int>>(service);
+    }
+
+    //TEST 16
     [Fact]
     public void GetType_ResolveSharedAbstractType()
     {
         //arrange
-        var container = new DependencyContainer();
-        container.AddSingleton<IConfigProvider, ConfigProvider>();
-        container.AddSingleton<ConfigConsumerA>();
-        container.AddSingleton<ConfigConsumerB>();
+        DependencyContainer container = new();
+        container.AddSingleton<IList<int>, List<int>>();
+        container.AddSingleton<ServiceH>();
 
-        var resolver = new DependencyResolver(container);
+        DependencyResolver resolver = new(container);
 
         //act
-        var service = resolver.GetService<ConfigConsumerA>();
+        ServiceH service = Assert.IsType<ServiceH>(resolver.GetService<ServiceH>());
 
         //assert
-        Assert.NotNull(service);
-        Assert.IsType<ConfigConsumerA>(service);
+        Assert.IsType<List<int>>(service.ListA);
+        Assert.Same(service.ListA, service.ListB);
     }
 }
