@@ -1,6 +1,6 @@
-# PulseInject
+## PulseInject
 
-PulseInject is a lightweight dependency injection container for .NET, developed as a standalone component of the LambdaPulse web server engine.
+PulseInject is a lightweight dependency injection container built around a resolution engine.
 
 > **Status:** Beta. PulseInject is under active development and its public API may change before version 1.0.
 
