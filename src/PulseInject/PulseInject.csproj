@@ -4,11 +4,36 @@
 		<TargetFramework>net10.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
-		
-		<IsPackable>true</IsPackable>
-		<PackageId>PulseInject</PackageId>
-		<AssemblyName>PulseInject</AssemblyName>
-		<RootNamespace>PulseInject</RootNamespace>
-	</PropertyGroup>
 
+    <Version>0.1.0-beta.1</Version>
+
+    <AssemblyName>PulseInject</AssemblyName>
+		<RootNamespace>PulseInject</RootNamespace>
+
+    <IsPackable>true</IsPackable>
+    <PackageId>PulseInject</PackageId>
+    <Title>PulseInject</Title>
+    <Description>
+      Custom lightweight dependency injection container with its associated resolver engine.
+    </Description>
+    <Authors>Matej Refka</Authors>
+    <Copyright>Copyright © 2026 Matej Refka</Copyright>
+
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+
+    <PackageProjectUrl>https://github.com/MatejRefka/PulseInject</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/MatejRefka/PulseInject</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+
+    <PackageTags>dependency-injection;di;ioc</PackageTags>
+
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+	</PropertyGroup>
+  
 </Project>
